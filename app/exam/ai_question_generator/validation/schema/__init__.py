@@ -1,0 +1,3 @@
+from .schema_freeform import QUESTION_FREEFORM_SCHEMA
+from .schema_choice import QUESTION_CHOICE_SCHEMA
+from .schema_code import QUESTION_CODE_SCHEMA
