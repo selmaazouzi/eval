@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diagramme de Classes - Système de Génération d'Examens</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f8f9fa;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 30px;
+            font-size: 28px;
+        }
+        
+        .diagram {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .class-box {
+            border: 2px solid #34495e;
+            border-radius: 8px;
+            padding: 15px;
+            background: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            font-size: 12px;
+            min-height: 200px;
+        }
+        
+        .model { background: linear-gradient(135deg, #fff3cd, #ffeaa7); }
+        .service { background: linear-gradient(135deg, #d1ecf1, #74b9ff); }
+        .config { background: linear-gradient(135deg, #f8d7da, #fd79a8); }
+        .generator { background: linear-gradient(135deg, #d4edda, #00b894); }
+        
+        .class-name {
+            font-weight: bold;
+            font-size: 14px;
+            text-align: center;
+            margin-bottom: 10px;
+            padding: 8px;
+            background: rgba(0,0,0,0.1);
+            border-radius: 4px;
+            color: #2c3e50;
+        }
+        
+        .attributes, .methods {
+            margin: 10px 0;
+        }
+        
+        .attributes h4, .methods h4 {
+            margin: 5px 0;
+            font-size: 12px;
+            color: #34495e;
+            border-bottom: 1px solid #bdc3c7;
+            padding-bottom: 2px;
+        }
+        
+        .attributes ul, .methods ul {
+            list-style: none;
+            padding: 0;
+            margin: 5px 0;
+        }
+        
+        .attributes li, .methods li {
+            padding: 2px 0;
+            font-size: 11px;
+            line-height: 1.3;
+        }
+        
+        .attributes li::before {
+            content: "- ";
+            color: #e74c3c;
+            font-weight: bold;
+        }
+        
+        .methods li::before {
+            content: "+ ";
+            color: #27ae60;
+            font-weight: bold;
+        }
+        
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+        
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+            border: 1px solid #34495e;
+        }
+        
+        .relationships {
+            margin: 20px 0;
+            text-align: center;
+            font-style: italic;
+            color: #7f8c8d;
+        }
+        
+        @media print {
+            body { background: white; }
+            .container { box-shadow: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Diagramme de Classes - Système de Génération d'Examens</h1>
+        
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color model"></div>
+                <span>Modèles de données</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color service"></div>
+                <span>Services métier</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color config"></div>
+                <span>Configuration</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color generator"></div>
+                <span>Générateurs IA</span>
+            </div>
+        </div>
+        
+        <div class="diagram">
+            <!-- Question Model -->
+            <div class="class-box model">
+                <div class="class-name">Question</div>
+                <div class="attributes">
+                    <h4>Attributs</h4>
+                    <ul>
+                        <li>id : UUID</li>
+                        <li>question_type : String(50)</li>
+                        <li>category : String(50)</li>
+                        <li>difficulty : String(20)</li>
+                        <li>tags : String(200)</li>
+                        <li>time_limit : Integer</li>
+                        <li>active : Boolean</li>
+                        <li>help_description : Text</li>
+                        <li>statement : Text</li>
+                        <li>keycloak_group_id : String(50)</li>
+                    </ul>
+                </div>
+                <div class="methods">
+                    <h4>Méthodes</h4>
+                    <ul>
+                        <li>to_dict() : dict</li>
+                        <li>get_active_questions() : List[Question]</li>
+                        <li>clear_all() : void</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- Config -->
+            <div class="class-box config">
+                <div class="class-name">Config</div>
+                <div class="attributes">
+                    <h4>Attributs</h4>
+                    <ul>
+                        <li>SECRET_KEY : String</li>
+                        <li>SPRING_URL : String</li>
+                        <li>SQLALCHEMY_DATABASE_URI : String</li>
+                    </ul>
+                </div>
+                <div class="methods">
+                    <h4>Méthodes</h4>
+                    <ul>
+                        <li>get_config() : Config</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- ExamGenerationService -->
+            <div class="class-box service">
+                <div class="class-name">ExamGenerationService</div>
+                <div class="methods">
+                    <h4>Méthodes</h4>
+                    <ul>
+                        <li>generate(params: Dict) : Dict</li>
+                        <li>generate_ai_questions(params: Dict) : List[Dict]</li>
+                        <li>load_questions(userGroupId: String) : DataFrame</li>
+                        <li>filter_by_column(df: DataFrame, column: String, value: Any) : DataFrame</li>
+                        <li>filter_code_questions(df: DataFrame, params: Dict) : DataFrame</li>
+                        <li>adjust_duration(df: DataFrame, target_duration: int) : DataFrame</li>
+                        <li>filter_by_tag_and_type(df: DataFrame, generate_exam: List, difficulty: String) : DataFrame</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- AIConfig -->
+            <div class="class-box config">
+                <div class="class-name">AIConfig</div>
+                <div class="attributes">
+                    <h4>Attributs</h4>
+                    <ul>
+                        <li>OWUI_TOKEN : String</li>
+                        <li>OPENROUTER_API_KEY : String</li>
+                        <li>MODEL_NAME : String</li>
+                        <li>OPENWEBUI_URL : String</li>
+                        <li>OPENROUTER_URL : String</li>
+                        <li>OPENROUTER_MODEL : String</li>
+                        <li>OLLAMA_BASE_URL : String</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- FreeformGenerator -->
+            <div class="class-box generator">
+                <div class="class-name">FreeformGenerator</div>
+                <div class="methods">
+                    <h4>Méthodes</h4>
+                    <ul>
+                        <li>generate_freeform_question(category: String, difficulty: String, tags: List, context: String) : Dict</li>
+                        <li>build_freeform_prompt(context: String, category: String, difficulty: String, tags: List) : Tuple[String, String]</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- ChoiceGenerator -->
+            <div class="class-box generator">
+                <div class="class-name">ChoiceGenerator</div>
+                <div class="methods">
+                    <h4>Méthodes</h4>
+                    <ul>
+                        <li>generate_choice_question(category: String, difficulty: String, tags: List, qtype: String, context: String) : Dict</li>
+                        <li>build_choice_prompt(context: String, category: String, difficulty: String, tags: List, qtype: String) : Tuple[String, String]</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- CodeGenerator -->
+            <div class="class-box generator">
+                <div class="class-name">CodeGenerator</div>
+                <div class="methods">
+                    <h4>Méthodes</h4>
+                    <ul>
+                        <li>generate_code_question(category: String, difficulty: String, tags: List, context: String) : Dict</li>
+                        <li>build_code_prompt(context: String, category: String, difficulty: String, tags: List) : Tuple[String, String]</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- ContextManager -->
+            <div class="class-box service">
+                <div class="class-name">ContextManager</div>
+                <div class="attributes">
+                    <h4>Attributs</h4>
+                    <ul>
+                        <li>TYPE_FIELDS_MAP : Dict</li>
+                    </ul>
+                </div>
+                <div class="methods">
+                    <h4>Méthodes</h4>
+                    <ul>
+                        <li>retrieve_context(query: String, vectordb: FAISS, k: int) : String</li>
+                        <li>generate_context_snippet(docs: List) : String</li>
+                        <li>load_vectorstore() : FAISS</li>
+                        <li>build_vectorstore(df: DataFrame, output_dir: String) : FAISS</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- LLMService -->
+            <div class="class-box service">
+                <div class="class-name">LLMService</div>
+                <div class="attributes">
+                    <h4>Attributs</h4>
+                    <ul>
+                        <li>OPENROUTER_API_KEY : String</li>
+                        <li>OPENROUTER_MODEL : String</li>
+                        <li>OLLAMA_BASE_URL : String</li>
+                        <li>MODEL_NAME : String</li>
+                    </ul>
+                </div>
+                <div class="methods">
+                    <h4>Méthodes</h4>
+                    <ul>
+                        <li>call_openrouter(system_msg: String, user_msg: String) : Dict</li>
+                        <li>call_ollama(system_msg: String, user_msg: String) : Dict</li>
+                        <li>generate_with_fallback(system_msg: String, user_msg: String) : Dict</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- ValidationService -->
+            <div class="class-box service">
+                <div class="class-name">ValidationService</div>
+                <div class="attributes">
+                    <h4>Attributs</h4>
+                    <ul>
+                        <li>QUESTION_FREEFORM_SCHEMA : Dict</li>
+                        <li>QUESTION_CHOICE_SCHEMA : Dict</li>
+                        <li>QUESTION_CODE_SCHEMA : Dict</li>
+                    </ul>
+                </div>
+                <div class="methods">
+                    <h4>Méthodes</h4>
+                    <ul>
+                        <li>validate_freeform_payload(payload: Dict) : Dict</li>
+                        <li>validate_choice_payload(payload: Dict) : Dict</li>
+                        <li>validate_code_payload(payload: Dict) : Dict</li>
+                        <li>_trim_and_dedupe_answers(answers: List) : List</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- AIExamGenerators -->
+            <div class="class-box generator">
+                <div class="class-name">AIExamGenerators</div>
+                <div class="methods">
+                    <h4>Méthodes</h4>
+                    <ul>
+                        <li>freeform_exam_generator(generate_exam: Dict, difficulty: String, category: String, vectorstore: FAISS) : List[Dict]</li>
+                        <li>choice_exam_generator(generate_exam: Dict, difficulty: String, category: String, vectorstore: FAISS) : List[Dict]</li>
+                        <li>code_exam_generator(code_params: Dict, difficulty: String, category: String, vectorstore: FAISS) : List[Dict]</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- OpenWebUIService -->
+            <div class="class-box service">
+                <div class="class-name">OpenWebUIService</div>
+                <div class="attributes">
+                    <h4>Attributs</h4>
+                    <ul>
+                        <li>KNOWLEDGE_ID_MAP : Dict</li>
+                    </ul>
+                </div>
+                <div class="methods">
+                    <h4>Méthodes</h4>
+                    <ul>
+                        <li>query_openwebui(prompt: String, knowledge_id: String) : String</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="relationships">
+            <p><strong>Relations principales :</strong> ExamGenerationService utilise Question, AIExamGenerators, et les services de validation. 
+            Les générateurs IA utilisent ContextManager, LLMService et ValidationService pour créer des questions.</p>
+        </div>
+    </div>
+</body>
+</html>
