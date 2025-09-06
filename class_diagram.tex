@@ -1,0 +1,259 @@
+\documentclass{report}
+
+% Packages nécessaires pour le diagramme UML
+\usepackage[utf8]{inputenc}
+\usepackage[french]{babel}
+\usepackage{tikz}
+\usepackage{tikz-uml}
+\usepackage{geometry}
+\usepackage{xcolor}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{float}
+
+% Configuration de la page
+\geometry{a4paper, margin=1.5cm}
+
+% Définition des couleurs
+\definecolor{modelcolor}{RGB}{255,255,204}
+\definecolor{servicecolor}{RGB}{204,229,255}
+\definecolor{configcolor}{RGB}{255,204,229}
+\definecolor{generatorcolor}{RGB}{204,255,204}
+
+\begin{document}
+
+\chapter{Architecture du système - Diagramme de classes}
+
+\section{Vue d'ensemble du système}
+
+Le système de génération d'examens est organisé autour de plusieurs modules principaux :
+\begin{itemize}
+    \item \textbf{Modèles de données} : Représentation des questions d'examen
+    \item \textbf{Services de génération} : Logique de sélection et filtrage des questions
+    \item \textbf{Générateurs IA} : Création automatique de questions via LLM
+    \item \textbf{Configuration et utilitaires} : Gestion de la configuration système
+\end{itemize}
+
+\section{Diagramme de classes}
+
+\begin{figure}[H]
+\centering
+\resizebox{\textwidth}{!}{
+\begin{tikzpicture}
+
+% Classe Question (Modèle principal)
+\umlclass[fill=modelcolor, x=0, y=10]{Question}{
+    - id : UUID \\
+    - question\_type : String(50) \\
+    - category : String(50) \\
+    - difficulty : String(20) \\
+    - tags : String(200) \\
+    - time\_limit : Integer \\
+    - active : Boolean \\
+    - help\_description : Text \\
+    - statement : Text \\
+    - keycloak\_group\_id : String(50)
+}{
+    + to\_dict() : dict \\
+    + get\_active\_questions() : List[Question] \\
+    + clear\_all() : void
+}
+
+% Classe Config
+\umlclass[fill=configcolor, x=10, y=10]{Config}{
+    + SECRET\_KEY : String \\
+    + SPRING\_URL : String \\
+    + SQLALCHEMY\_DATABASE\_URI : String
+}{
+    + get\_config() : Config
+}
+
+% Service de génération d'examen principal
+\umlclass[fill=servicecolor, x=0, y=7]{ExamGenerationService}{
+    
+}{
+    + generate(params: Dict) : Dict \\
+    + generate\_ai\_questions(params: Dict) : List[Dict] \\
+    + load\_questions(userGroupId: String) : DataFrame \\
+    + filter\_by\_column(df: DataFrame, column: String, value: Any) : DataFrame \\
+    + filter\_code\_questions(df: DataFrame, params: Dict) : DataFrame \\
+    + adjust\_duration(df: DataFrame, target\_duration: int) : DataFrame \\
+    + filter\_by\_tag\_and\_type(df: DataFrame, generate\_exam: List, difficulty: String) : DataFrame \\
+    + distribute\_questions\_by\_difficulty(df: DataFrame, num\_questions: int, difficulty: String) : DataFrame
+}
+
+% Générateurs IA spécialisés
+\umlclass[fill=generatorcolor, x=5, y=7]{FreeformGenerator}{
+    
+}{
+    + generate\_freeform\_question(category: String, difficulty: String, tags: List, context: String) : Dict
+}
+
+\umlclass[fill=generatorcolor, x=10, y=7]{ChoiceGenerator}{
+    
+}{
+    + generate\_choice\_question(category: String, difficulty: String, tags: List, qtype: String, context: String) : Dict
+}
+
+\umlclass[fill=generatorcolor, x=15, y=7]{CodeGenerator}{
+    
+}{
+    + generate\_code\_question(category: String, difficulty: String, tags: List, context: String) : Dict
+}
+
+% Générateurs d'examen IA
+\umlclass[fill=generatorcolor, x=0, y=4]{AIExamGenerators}{
+    
+}{
+    + freeform\_exam\_generator(generate\_exam: Dict, difficulty: String, category: String, vectorstore: FAISS) : List[Dict] \\
+    + choice\_exam\_generator(generate\_exam: Dict, difficulty: String, category: String, vectorstore: FAISS) : List[Dict] \\
+    + code\_exam\_generator(code\_params: Dict, difficulty: String, category: String, vectorstore: FAISS) : List[Dict]
+}
+
+% Gestion du contexte et vectorisation
+\umlclass[fill=servicecolor, x=5, y=4]{ContextManager}{
+    - TYPE\_FIELDS\_MAP : Dict
+}{
+    + retrieve\_context(query: String, vectordb: FAISS, k: int) : String \\
+    + generate\_context\_snippet(docs: List) : String \\
+    + load\_vectorstore() : FAISS \\
+    + build\_vectorstore(df: DataFrame, output\_dir: String) : FAISS
+}
+
+% Services LLM
+\umlclass[fill=servicecolor, x=10, y=4]{LLMService}{
+    - OPENROUTER\_API\_KEY : String \\
+    - OPENROUTER\_MODEL : String \\
+    - OLLAMA\_BASE\_URL : String \\
+    - MODEL\_NAME : String
+}{
+    + call\_openrouter(system\_msg: String, user\_msg: String) : Dict \\
+    + call\_ollama(system\_msg: String, user\_msg: String) : Dict \\
+    + generate\_with\_fallback(system\_msg: String, user\_msg: String) : Dict
+}
+
+% Service de validation
+\umlclass[fill=servicecolor, x=15, y=4]{ValidationService}{
+    - QUESTION\_FREEFORM\_SCHEMA : Dict \\
+    - QUESTION\_CHOICE\_SCHEMA : Dict \\
+    - QUESTION\_CODE\_SCHEMA : Dict
+}{
+    + validate\_freeform\_payload(payload: Dict) : Dict \\
+    + validate\_choice\_payload(payload: Dict) : Dict \\
+    + validate\_code\_payload(payload: Dict) : Dict \\
+    - \_trim\_and\_dedupe\_answers(answers: List) : List
+}
+
+% Constructeurs de prompts
+\umlclass[fill=servicecolor, x=0, y=1]{PromptBuilders}{
+    
+}{
+    + build\_freeform\_prompt(context: String, category: String, difficulty: String, tags: List) : Tuple[String, String] \\
+    + build\_choice\_prompt(context: String, category: String, difficulty: String, tags: List, qtype: String) : Tuple[String, String] \\
+    + build\_code\_prompt(context: String, category: String, difficulty: String, tags: List) : Tuple[String, String]
+}
+
+% Configuration IA
+\umlclass[fill=configcolor, x=5, y=1]{AIConfig}{
+    + OWUI\_TOKEN : String \\
+    + OPENROUTER\_API\_KEY : String \\
+    + MODEL\_NAME : String \\
+    + OPENWEBUI\_URL : String \\
+    + OPENROUTER\_URL : String \\
+    + OPENROUTER\_MODEL : String \\
+    + OLLAMA\_BASE\_URL : String
+}{
+    
+}
+
+% Service OpenWebUI
+\umlclass[fill=servicecolor, x=10, y=1]{OpenWebUIService}{
+    - KNOWLEDGE\_ID\_MAP : Dict
+}{
+    + query\_openwebui(prompt: String, knowledge\_id: String) : String
+}
+
+% Relations principales
+\umldep[geometry=-|]{ExamGenerationService}{Question}
+\umldep[geometry=-|]{ExamGenerationService}{AIExamGenerators}
+\umldep[geometry=-|]{AIExamGenerators}{FreeformGenerator}
+\umldep[geometry=-|]{AIExamGenerators}{ChoiceGenerator}
+\umldep[geometry=-|]{AIExamGenerators}{CodeGenerator}
+\umldep[geometry=-|]{FreeformGenerator}{ContextManager}
+\umldep[geometry=-|]{ChoiceGenerator}{ContextManager}
+\umldep[geometry=-|]{CodeGenerator}{ContextManager}
+\umldep[geometry=-|]{FreeformGenerator}{LLMService}
+\umldep[geometry=-|]{ChoiceGenerator}{LLMService}
+\umldep[geometry=-|]{CodeGenerator}{LLMService}
+\umldep[geometry=-|]{FreeformGenerator}{ValidationService}
+\umldep[geometry=-|]{ChoiceGenerator}{ValidationService}
+\umldep[geometry=-|]{CodeGenerator}{ValidationService}
+\umldep[geometry=-|]{FreeformGenerator}{PromptBuilders}
+\umldep[geometry=-|]{ChoiceGenerator}{PromptBuilders}
+\umldep[geometry=-|]{CodeGenerator}{PromptBuilders}
+\umldep[geometry=-|]{LLMService}{AIConfig}
+\umldep[geometry=-|]{OpenWebUIService}{AIConfig}
+\umldep[geometry=-|]{ContextManager}{Question}
+
+\end{tikzpicture}
+}
+\caption{Diagramme de classes du système de génération d'examens}
+\label{fig:class_diagram}
+\end{figure}
+
+\section{Description des classes principales}
+
+\subsection{Question}
+Classe modèle SQLAlchemy représentant une question d'examen dans la base de données PostgreSQL. Elle contient tous les attributs nécessaires pour définir une question (type, catégorie, difficulté, tags, etc.) et fournit des méthodes pour la manipulation des données.
+
+\textbf{Attributs principaux :}
+\begin{itemize}
+    \item \texttt{id} : Identifiant unique UUID
+    \item \texttt{question\_type} : Type de question (choice, freeform, code)
+    \item \texttt{difficulty} : Niveau de difficulté (EASY, MEDIUM, HARD)
+    \item \texttt{tags} : Mots-clés associés à la question
+    \item \texttt{keycloak\_group\_id} : Identifiant du groupe Keycloak pour la sécurité
+\end{itemize}
+
+\subsection{ExamGenerationService}
+Service principal orchestrant la génération d'examens. Il coordonne le filtrage des questions existantes, l'ajustement de la durée et l'intégration des questions générées par IA.
+
+\textbf{Responsabilités :}
+\begin{itemize}
+    \item Chargement des questions depuis la base de données
+    \item Filtrage par difficulté, tags et type
+    \item Ajustement de la durée totale de l'examen
+    \item Coordination avec les générateurs IA
+\end{itemize}
+
+\subsection{Générateurs IA (FreeformGenerator, ChoiceGenerator, CodeGenerator)}
+Classes spécialisées dans la génération de questions spécifiques via des modèles de langage (LLM). Chaque générateur utilise des prompts adaptés à son type de question.
+
+\textbf{Pipeline de génération :}
+\begin{enumerate}
+    \item Récupération du contexte via FAISS
+    \item Construction des prompts spécialisés
+    \item Appel aux services LLM (OpenRouter/Ollama)
+    \item Validation du JSON généré
+\end{enumerate}
+
+\subsection{ContextManager}
+Service gérant la vectorisation des questions existantes et la récupération de contexte pour les générateurs IA. Utilise FAISS pour la recherche de similarité sémantique.
+
+\subsection{LLMService}
+Service d'interface avec les modèles de langage, implémentant un système de fallback entre OpenRouter (cloud) et Ollama (local).
+
+\subsection{ValidationService}
+Service de validation des questions générées par IA, utilisant des schémas JSON Schema pour garantir la conformité des données.
+
+\section{Patterns architecturaux utilisés}
+
+\begin{itemize}
+    \item \textbf{Service Layer Pattern} : Séparation claire entre la logique métier et l'accès aux données
+    \item \textbf{Strategy Pattern} : Différents générateurs pour différents types de questions
+    \item \textbf{Fallback Pattern} : Basculement automatique entre services LLM
+    \item \textbf{Factory Pattern} : Construction de prompts spécialisés selon le type
+\end{itemize}
+
+\end{document}
